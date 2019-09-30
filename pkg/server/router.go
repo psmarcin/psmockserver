@@ -1,0 +1,89 @@
+package server
+
+import (
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"psmockserver/pkg/mock"
+
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
+	"github.com/kataras/golog"
+)
+
+func CreateRouter() *chi.Mux {
+	router := chi.NewRouter()
+
+	// middlewares
+	router.Use(LogMiddleware)
+	router.Use(middleware.Recoverer)
+
+	// routes
+	router.Post(`/mockserver`, addMockHandler)
+	router.Get(`/mockserver`, listMockHandler)
+	router.HandleFunc(`/*`, rootHandler)
+	router.NotFound(http.NotFound)
+
+	return router
+}
+
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+	m, err := mock.Find(mock.GetMockHash(r.Method, r.RequestURI))
+	if err != nil {
+		golog.Warnf("Didn't find mock for: %s %s", r.Method, r.RequestURI)
+		mock.List()
+		http.NotFound(w, r)
+		return
+	}
+	golog.Infof("Found mock for %s", r.RequestURI)
+	// set headers
+	for k, v := range m.Headers {
+		w.Header().Set(k, v[0])
+	}
+	// set statusCode
+	w.WriteHeader(m.StatusCode)
+	fmt.Fprint(w, m.Body)
+}
+
+func listMockHandler(w http.ResponseWriter, r *http.Request) {
+	str, err := mock.Serialize()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	w.Header().Add("content-type", "application/json")
+	w.Write(str)
+}
+
+func addMockHandler(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	// todo: handle error on parse
+	body, _ := ioutil.ReadAll(r.Body)
+	p, err := mock.Parse(body)
+	if err != nil {
+		http.Error(w, "cant parse", http.StatusBadRequest)
+		return
+	}
+	mock.Add(mock.GetMockHash(p.HttpRequest.Method, p.HttpRequest.Path), mock.Mock{
+		Headers:     addHeaders(p.HttpResponse.Headers),
+		StatusCode:  p.HttpResponse.StatusCode,
+		Body:        p.HttpResponse.Body,
+		ContentType: p.HttpRequest.ContentType,
+		Method:      p.HttpRequest.Method,
+		RemainingTimes: mock.Remaining{
+			Times:     p.Times.RemainingTimes,
+			Unlimited: p.Times.Unlimited,
+		},
+	})
+}
+
+func addHeaders(source map[string]interface{}) http.Header {
+	h := http.Header{}
+	// todo: support values different then strings
+
+	for k, v := range source {
+		h.Add(k, v.(string))
+	}
+
+	return h
+}
