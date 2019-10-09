@@ -1,7 +1,8 @@
 package config
 
 type Config struct {
-	Server Server
+	Server        Server
+	MocksFilePath string
 }
 
 type Server struct {
@@ -12,4 +13,5 @@ var Cfg = Config{
 	Server: Server{
 		Port: "8080",
 	},
+	MocksFilePath: "./default.json",
 }

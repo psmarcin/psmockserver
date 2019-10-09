@@ -1,4 +1,4 @@
-package server
+package utils
 
 import (
 	"net/http"
@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func Test_addHeaders(t *testing.T) {
+func Test_AddHeaders(t *testing.T) {
 	type args struct {
 		source map[string]interface{}
 	}
@@ -55,7 +55,7 @@ func Test_addHeaders(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := addHeaders(tt.args.source); !reflect.DeepEqual(got, tt.want) {
+			if got := AddHeaders(tt.args.source); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("addHeaders() = %v, want %v", got, tt.want)
 			}
 		})

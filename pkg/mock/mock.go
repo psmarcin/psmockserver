@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"psmockserver/pkg/config"
 
 	"github.com/kataras/golog"
 )
@@ -61,32 +62,6 @@ func Serialize() ([]byte, error) {
 	return json.Marshal(Mocks)
 }
 
-func DefaultMocks() {
-	Add(GetMockHash(http.MethodGet, "/"), Mock{
-		Headers:     http.Header{},
-		StatusCode:  http.StatusOK,
-		Body:        "test body",
-		Method:      http.MethodGet,
-		ContentType: "text/plain",
-		RemainingTimes: Remaining{
-			Times:     10,
-			Unlimited: true,
-		},
-	})
-
-	Add(GetMockHash(http.MethodPost, "/x"), Mock{
-		Headers:     http.Header{},
-		StatusCode:  http.StatusOK,
-		Body:        "test body1",
-		Method:      http.MethodPost,
-		ContentType: "text/asdlasdaslda",
-		RemainingTimes: Remaining{
-			Times:     10,
-			Unlimited: true,
-		},
-	})
-}
-
 func init() {
-	DefaultMocks()
+	LoadFromFile(config.Cfg.MocksFilePath)
 }
