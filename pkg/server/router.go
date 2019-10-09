@@ -1,6 +1,7 @@
 package server
 
 import (
+	"psmockserver/pkg/utils"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -65,7 +66,7 @@ func addMockHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	mock.Add(mock.GetMockHash(p.HttpRequest.Method, p.HttpRequest.Path), mock.Mock{
-		Headers:     addHeaders(p.HttpResponse.Headers),
+		Headers:     utils.AddHeaders(p.HttpResponse.Headers),
 		StatusCode:  p.HttpResponse.StatusCode,
 		Body:        p.HttpResponse.Body,
 		ContentType: p.HttpRequest.ContentType,
@@ -75,15 +76,4 @@ func addMockHandler(w http.ResponseWriter, r *http.Request) {
 			Unlimited: p.Times.Unlimited,
 		},
 	})
-}
-
-func addHeaders(source map[string]interface{}) http.Header {
-	h := http.Header{}
-	// todo: support values different then strings
-
-	for k, v := range source {
-		h.Add(k, v.(string))
-	}
-
-	return h
 }
