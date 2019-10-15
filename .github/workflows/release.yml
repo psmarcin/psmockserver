@@ -1,5 +1,9 @@
-name: Go
-on: [push]
+name: Release
+on:
+  push:
+    branches:
+      - master
+
 jobs:
   build:
     name: Build
@@ -14,12 +18,8 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@v1
 
-      - name: Get dependencies
-        run: |
-          make dependencies
-
-      - name: Build
-        run: make build
-
-      - name: Test
-        run: make test
+      - name: Run GoReleaser
+        uses: goreleaser/[email protected]
+        with:
+          version: latest
+          args: release
