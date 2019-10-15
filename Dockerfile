@@ -1,9 +1,9 @@
 FROM golang:1.13 as build-env
 
 WORKDIR /go/src/app
-ADD . /go/src/app
+ADD . /go/src/app/
 
-RUN make dependencies
+RUN cd /go/src/app/ && go mod download
 
 RUN go build -o /go/bin/app
 
