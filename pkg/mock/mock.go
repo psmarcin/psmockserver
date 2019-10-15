@@ -62,6 +62,10 @@ func Serialize() ([]byte, error) {
 	return json.Marshal(Mocks)
 }
 
+func Reset() {
+	Mocks = make(map[string]Mock)
+}
+
 func init() {
 	LoadFromFile(config.Cfg.MocksFilePath)
 }

@@ -11,12 +11,14 @@ import (
 func LoadFromFile(path string) {
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
-		golog.Errorf("Can't read file %+v", err)
+		golog.Infof("Can't read file %+v", err)
+		return
 	}
 
 	payloads, err := parseFileMocks(content)
 	if err != nil {
 		golog.Errorf("Can't parse file content %s with content %s", path, content)
+		return
 	}
 
 	for _, p := range payloads {

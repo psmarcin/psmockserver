@@ -111,3 +111,23 @@ func TestAdd(t *testing.T) {
 		})
 	}
 }
+
+func TestReset(t *testing.T) {
+
+	// mock
+	Add("GET|/", Mock{
+		Body: "123",
+	})
+
+	if len(Mocks) == 0 {
+		t.Fatalf("Didn't set any mock before Reset()")
+	}
+
+	// act
+	Reset()
+
+	// expect
+	if len(Mocks) != 0 {
+		t.Fatalf("Reset() should clean all mocks but got %d mocks", len(Mocks))
+	}
+}
