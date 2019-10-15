@@ -1,11 +1,11 @@
 package server
 
 import (
-	"psmockserver/pkg/utils"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"psmockserver/pkg/mock"
+	"psmockserver/pkg/utils"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -22,6 +22,7 @@ func CreateRouter() *chi.Mux {
 	// routes
 	router.Post(`/mockserver`, addMockHandler)
 	router.Get(`/mockserver`, listMockHandler)
+	router.Put(`/mockserver/reset`, resetHandler)
 	router.HandleFunc(`/*`, rootHandler)
 	router.NotFound(http.NotFound)
 
@@ -76,4 +77,9 @@ func addMockHandler(w http.ResponseWriter, r *http.Request) {
 			Unlimited: p.Times.Unlimited,
 		},
 	})
+}
+
+func resetHandler(w http.ResponseWriter, r *http.Request) {
+	mock.Reset()
+	w.WriteHeader(http.StatusAccepted)
 }
