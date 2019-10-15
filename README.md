@@ -7,6 +7,7 @@ psmockserver is a MockServer(https://mock-server.com) implementation in Go.
 psmockserver loads by default file `./default.json`.
 
 
-### Missing featiures
+### Missing features
 
 * [ ] Validate request body
+* [x] Test hooks
