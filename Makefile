@@ -24,3 +24,7 @@ debug:
 
 release:
 	goreleaser --rm-dist
+
+# Mock tests
+mock-test:
+	./test/setup.sh
