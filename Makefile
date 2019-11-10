@@ -22,7 +22,7 @@ docker-run:
 debug:
 	dlv debug --headless --listen=:2345 --log --api-version 2
 
-release:
+release: mock-test
 	goreleaser --rm-dist
 
 # Mock tests
