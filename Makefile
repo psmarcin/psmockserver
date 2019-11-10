@@ -8,7 +8,7 @@ dependencies:
 	go mod download
 
 test: dependencies
-	go test ./...
+	go test ./pkg/...
 
 build: dependencies
 	go build main.go
@@ -22,5 +22,9 @@ docker-run:
 debug:
 	dlv debug --headless --listen=:2345 --log --api-version 2
 
-release:
+release: mock-test
 	goreleaser --rm-dist
+
+# Mock tests
+mock-test:
+	./test/setup.sh
