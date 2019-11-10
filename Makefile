@@ -8,7 +8,7 @@ dependencies:
 	go mod download
 
 test: dependencies
-	go test ./...
+	go test ./pkg/...
 
 build: dependencies
 	go build main.go
