@@ -1,2 +1,8 @@
 bin
 .vscode
+dist
+test
+.goreleaser.yml
+.realize.yaml
+main
+README.md
