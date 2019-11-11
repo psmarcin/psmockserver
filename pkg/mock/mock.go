@@ -23,14 +23,17 @@ type Remaining struct {
 	Unlimited bool
 }
 
-var Mocks = make(map[string]Mock)
+// Mocks holds all mocks
+var Mocks = make(map[*http.Request]Mock)
 
-func Add(id string, mock Mock) error {
+// Add should add new mock to collection
+func Add(id *http.Request, mock Mock) error {
 	Mocks[id] = mock
 	return nil
 }
 
-func Find(id string) (Mock, error) {
+// Find looks for mock by id in mock collection
+func Find(id *http.Request) (Mock, error) {
 	mock, ok := Mocks[id]
 	if ok != true {
 		return mock, errors.New("Not found")
@@ -51,21 +54,25 @@ func Find(id string) (Mock, error) {
 	return Mock{}, errors.New("Not found")
 }
 
+// List logs all mocked endpoints
 func List() {
 	golog.Infof("Mocks list: ")
 	for x := range Mocks {
-		golog.Infof("\t - %s", x)
+		golog.Infof("\t - %s %s", x.Method, x.RequestURI)
 	}
 }
 
+// Serialize marshals json
 func Serialize() ([]byte, error) {
 	return json.Marshal(Mocks)
 }
 
+// Reset cleanup mock collection
 func Reset() {
-	Mocks = make(map[string]Mock)
+	Mocks = make(map[*http.Request]Mock)
 }
 
+// init loads mocks from file
 func init() {
 	LoadFromFile(config.Cfg.MocksFilePath)
 }

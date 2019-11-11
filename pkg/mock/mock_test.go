@@ -8,8 +8,9 @@ import (
 
 func TestFind(t *testing.T) {
 	type args struct {
-		id string
+		id *http.Request
 	}
+	id, _ := http.NewRequest(http.MethodGet, "/not-foud", nil)
 	tests := []struct {
 		name    string
 		args    args
@@ -19,7 +20,7 @@ func TestFind(t *testing.T) {
 		{
 			name: "should not find mock",
 			args: args{
-				id: "GET|/not-foud",
+				id,
 			},
 			want:    Mock{},
 			wantErr: true,
@@ -40,7 +41,7 @@ func TestFind(t *testing.T) {
 }
 
 func TestFindTimes0(t *testing.T) {
-	id := "GET|/test-mock-times-0"
+	id, _ := http.NewRequest(http.MethodGet, "/test-mock-times-0", nil)
 	m := Mock{
 		Body: "test-mock-times-0",
 		RemainingTimes: Remaining{
@@ -58,7 +59,7 @@ func TestFindTimes0(t *testing.T) {
 }
 
 func TestFindShouldDecreaseTimes(t *testing.T) {
-	id := "GET|/test-mock-times-10"
+	id, _ := http.NewRequest(http.MethodGet, "/test-mock-times-10", nil)
 	m := Mock{
 		Body: "test-mock-times-10",
 		RemainingTimes: Remaining{
@@ -81,9 +82,10 @@ func TestFindShouldDecreaseTimes(t *testing.T) {
 
 func TestAdd(t *testing.T) {
 	type args struct {
-		id   string
+		id   *http.Request
 		mock Mock
 	}
+	id, _ := http.NewRequest(http.MethodGet, "/", nil)
 	tests := []struct {
 		name    string
 		args    args
@@ -92,7 +94,7 @@ func TestAdd(t *testing.T) {
 		{
 			name: "should add mock to root handler",
 			args: args{
-				id: "GET|/",
+				id: id,
 				mock: Mock{
 					Body:        "test",
 					Headers:     http.Header{},
@@ -113,9 +115,9 @@ func TestAdd(t *testing.T) {
 }
 
 func TestReset(t *testing.T) {
-
+	id, _ := http.NewRequest(http.MethodGet, "/", nil)
 	// mock
-	Add("GET|/", Mock{
+	Add(id, Mock{
 		Body: "123",
 	})
 

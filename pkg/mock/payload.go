@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/kataras/golog"
 )
@@ -61,6 +60,8 @@ func Parse(body []byte) (Payload, error) {
 	return payload, nil
 }
 
-func GetMockHash(method, path string) string {
-	return fmt.Sprintf("%s|%s", strings.ToUpper(method), path)
+// GetMockHash returns id for mock
+func GetMockHash(method, path string) *http.Request {
+	id, _ := http.NewRequest(method, path, nil)
+	return id
 }
