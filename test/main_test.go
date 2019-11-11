@@ -10,6 +10,8 @@ const (
 )
 
 func TestListOfAllMocks(t *testing.T) {
+	BeforeEach()
+
 	url := baseURL + "mockserver"
 
 	req, _ := http.NewRequest("GET", url, nil)
@@ -21,9 +23,12 @@ func TestListOfAllMocks(t *testing.T) {
 	if res.StatusCode != 200 {
 		t.Fatalf("Can't get list of all mocked paths")
 	}
+
+	AfterEach()
 }
 
 func TestShouldGet404OnNonMockedEndpoint(t *testing.T) {
+	BeforeEach()
 	url := baseURL + ""
 
 	req, _ := http.NewRequest("GET", url, nil)
@@ -35,4 +40,6 @@ func TestShouldGet404OnNonMockedEndpoint(t *testing.T) {
 	if res.StatusCode != 404 {
 		t.Fatalf("Get %d instead of 404 status code", res.StatusCode)
 	}
+
+	AfterEach()
 }
