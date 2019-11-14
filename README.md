@@ -11,3 +11,6 @@ psmockserver loads by default file `./default.json`.
 
 * [ ] Validate request body
 * [x] Test hooks
+* [x] Integration tests https://github.com/psmarcin/psmockserver/pull/8
+* [ ] Support query strings https://github.com/psmarcin/psmockserver/issues/7
+* [ ] Clear mocks using cookies/headers https://github.com/psmarcin/psmockserver/issues/10
