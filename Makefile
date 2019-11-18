@@ -27,4 +27,4 @@ release: mock-test
 
 # Mock tests
 mock-test:
-	./test/setup.sh
+	./test/setup.sh || ./test/cleanup.sh

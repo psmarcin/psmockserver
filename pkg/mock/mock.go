@@ -4,23 +4,30 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/http/httputil"
 	"psmockserver/pkg/config"
+	"reflect"
 
 	"github.com/kataras/golog"
 )
 
 type Mock struct {
-	Body           string
-	Headers        http.Header
-	Method         string
-	StatusCode     int
-	ContentType    string
-	RemainingTimes Remaining
+	Body           string      `json:"body"`
+	Headers        http.Header `json:"headers"`
+	Method         string      `json:"method"`
+	StatusCode     int         `json:"statusCode"`
+	ContentType    string      `json:"contentType"`
+	RemainingTimes Remaining   `json:"remainingTimes"`
+}
+
+type MockWithRequest struct {
+	Mock    `json:"mock"`
+	Request string `json:"request"`
 }
 
 type Remaining struct {
-	Times     int
-	Unlimited bool
+	Times     int  `json:"times"`
+	Unlimited bool `json:"unlimited"`
 }
 
 // Mocks holds all mocks
@@ -34,8 +41,17 @@ func Add(id *http.Request, mock Mock) error {
 
 // Find looks for mock by id in mock collection
 func Find(id *http.Request) (Mock, error) {
-	mock, ok := Mocks[id]
-	if ok != true {
+	found := false
+	mock := Mock{}
+	for key, value := range Mocks {
+		if reflect.DeepEqual(&id, &key) {
+			golog.Infof("Found %s %s", key.RequestURI, key.Method)
+			found = true
+			mock = value
+			break
+		}
+	}
+	if found != true {
 		return mock, errors.New("Not found")
 	}
 
@@ -58,13 +74,22 @@ func Find(id *http.Request) (Mock, error) {
 func List() {
 	golog.Infof("Mocks list: ")
 	for x := range Mocks {
-		golog.Infof("\t - %s %s", x.Method, x.RequestURI)
+		golog.Infof("\t - %s %+v", x.URL.String(), x)
 	}
 }
 
 // Serialize marshals json
 func Serialize() ([]byte, error) {
-	return json.Marshal(Mocks)
+	var collection = make([]MockWithRequest, len(Mocks))
+	for request, mock := range Mocks {
+		url, _ := httputil.DumpRequest(request, true)
+		collection = append(collection, MockWithRequest{
+			Mock:    mock,
+			Request: string(url),
+		})
+	}
+
+	return json.Marshal(collection)
 }
 
 // Reset cleanup mock collection

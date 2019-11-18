@@ -8,6 +8,7 @@ import (
 	"github.com/kataras/golog"
 )
 
+// LoadFromFile loads default mocks from file from given path
 func LoadFromFile(path string) {
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -20,9 +21,12 @@ func LoadFromFile(path string) {
 		golog.Errorf("Can't parse file content %s with content %s", path, content)
 		return
 	}
-
 	for _, p := range payloads {
-		Add(GetMockHash(p.HttpRequest.Method, p.HttpRequest.Path), Mock{
+		Add(GetMockHash(RequestId{
+			Method:       p.HttpRequest.Method,
+			Path:         p.HttpRequest.Path,
+			QueryStrings: p.HttpRequest.QueryStrings,
+		}), Mock{
 			Headers:     utils.AddHeaders(p.HttpResponse.Headers),
 			StatusCode:  p.HttpResponse.StatusCode,
 			Body:        p.HttpResponse.Body,
@@ -41,9 +45,5 @@ func parseFileMocks(source []byte) ([]Payload, error) {
 	var mocks []Payload
 
 	err := json.Unmarshal(source, &mocks)
-	if err != nil {
-		return mocks, err
-	}
-
-	return mocks, nil
+	return mocks, err
 }
