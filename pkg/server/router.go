@@ -31,13 +31,15 @@ func CreateRouter() *chi.Mux {
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	queryStrings := r.URL.Query()
-	m, err := mock.Find(mock.GetMockHash(mock.RequestId{
+	reqID := mock.GetMockHash(mock.RequestId{
 		Method:       r.Method,
-		Path:         r.RequestURI,
+		Path:         r.URL.Path,
 		QueryStrings: queryStrings,
-	}))
+	})
+	m, err := mock.Find(reqID)
 	if err != nil {
 		golog.Warnf("Didn't find mock for: %s %s", r.Method, r.RequestURI)
+		mock.List()
 		http.NotFound(w, r)
 		return
 	}

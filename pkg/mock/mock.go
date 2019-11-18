@@ -41,6 +41,7 @@ func Add(id *http.Request, mock Mock) error {
 
 // Find looks for mock by id in mock collection
 func Find(id *http.Request) (Mock, error) {
+	var foundKey *http.Request
 	found := false
 	mock := Mock{}
 	for key, value := range Mocks {
@@ -48,7 +49,7 @@ func Find(id *http.Request) (Mock, error) {
 			golog.Infof("Found %s %s", key.RequestURI, key.Method)
 			found = true
 			mock = value
-			break
+			foundKey = key
 		}
 	}
 	if found != true {
@@ -61,11 +62,11 @@ func Find(id *http.Request) (Mock, error) {
 
 	if mock.RemainingTimes.Times > 0 {
 		mock.RemainingTimes.Times = mock.RemainingTimes.Times - 1
-		Mocks[id] = mock
+		Mocks[foundKey] = mock
 		return mock, nil
 	}
 
-	delete(Mocks, id)
+	delete(Mocks, foundKey)
 
 	return Mock{}, errors.New("Not found")
 }
@@ -74,7 +75,7 @@ func Find(id *http.Request) (Mock, error) {
 func List() {
 	golog.Infof("Mocks list: ")
 	for x := range Mocks {
-		golog.Infof("\t - %s %+v", x.URL.String(), x)
+		golog.Infof("\t - %s %s %s", x.Method, x.URL.String(), x.URL.Query().Encode())
 	}
 }
 
