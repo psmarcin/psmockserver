@@ -58,6 +58,24 @@ func TestFindTimes0(t *testing.T) {
 	t.Error("Find() found but expected not to found")
 }
 
+func TestFindQueryString(t *testing.T) {
+	id, _ := http.NewRequest(http.MethodGet, "/test-mock-times-0?queryString=test", nil)
+	m := Mock{
+		Body: "test-mock-times-0",
+		RemainingTimes: Remaining{
+			Times:     1,
+			Unlimited: false,
+		},
+	}
+	Add(id, m)
+	_, err := Find(id)
+	if err == nil {
+		return
+	}
+
+	t.Error("Find() found but expected not to found")
+}
+
 func TestFindShouldDecreaseTimes(t *testing.T) {
 	id, _ := http.NewRequest(http.MethodGet, "/test-mock-times-10", nil)
 	m := Mock{

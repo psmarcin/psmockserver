@@ -30,14 +30,19 @@ func CreateRouter() *chi.Mux {
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
-	m, err := mock.Find(mock.GetMockHash(r.Method, r.RequestURI))
+	queryStrings := r.URL.Query()
+	reqID := mock.GetMockHash(mock.RequestId{
+		Method:       r.Method,
+		Path:         r.URL.Path,
+		QueryStrings: queryStrings,
+	})
+	m, err := mock.Find(reqID)
 	if err != nil {
 		golog.Warnf("Didn't find mock for: %s %s", r.Method, r.RequestURI)
 		mock.List()
 		http.NotFound(w, r)
 		return
 	}
-	golog.Infof("Found mock for %s", r.RequestURI)
 	// set headers
 	for k, v := range m.Headers {
 		w.Header().Set(k, v[0])
@@ -66,7 +71,11 @@ func addMockHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "cant parse", http.StatusBadRequest)
 		return
 	}
-	mock.Add(mock.GetMockHash(p.HttpRequest.Method, p.HttpRequest.Path), mock.Mock{
+	mock.Add(mock.GetMockHash(mock.RequestId{
+		Method:       p.HttpRequest.Method,
+		Path:         p.HttpRequest.Path,
+		QueryStrings: p.HttpRequest.QueryStrings,
+	}), mock.Mock{
 		Headers:     utils.AddHeaders(p.HttpResponse.Headers),
 		StatusCode:  p.HttpResponse.StatusCode,
 		Body:        p.HttpResponse.Body,

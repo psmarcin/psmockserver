@@ -4,9 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"github.com/kataras/golog"
+	"net/url"
 )
+
+type RequestId struct {
+	Method       string
+	Path         string
+	QueryStrings url.Values
+}
 
 type Payload struct {
 	HttpRequest  `json:"httpRequest"`
@@ -15,9 +20,10 @@ type Payload struct {
 }
 
 type HttpRequest struct {
-	Method      string `json:"method"`
-	Path        string `json:"path"`
-	ContentType string `json:"content-type"`
+	Method       string     `json:"method"`
+	Path         string     `json:"path"`
+	ContentType  string     `json:"content-type"`
+	QueryStrings url.Values `json:"queryStringParameters"`
 }
 
 type HttpResponse struct {
@@ -55,13 +61,24 @@ func Parse(body []byte) (Payload, error) {
 	if err != nil {
 		return payload, fmt.Errorf("can't parse mock payload %w", err)
 	}
-	golog.Infof("Got schema %+v", payload)
 
 	return payload, nil
 }
 
 // GetMockHash returns id for mock
-func GetMockHash(method, path string) *http.Request {
-	id, _ := http.NewRequest(method, path, nil)
+func GetMockHash(params RequestId) *http.Request {
+	url, _ := url.Parse(params.Path)
+	// add query to parsed url
+	query := url.Query()
+	for key, values := range params.QueryStrings {
+		for _, value := range values {
+			query.Add(key, value)
+		}
+	}
+	url.RawQuery = query.Encode()
+	// create request
+	id, _ := http.NewRequest(params.Method, params.Path, nil)
+	// set url with query to request
+	id.URL = url
 	return id
 }
