@@ -2,6 +2,7 @@ package mock
 
 import (
 	"net/http"
+	"net/url"
 	"reflect"
 	"testing"
 )
@@ -245,8 +246,9 @@ func TestParse(t *testing.T) {
 
 func TestGetMockHash(t *testing.T) {
 	type args struct {
-		method string
-		path   string
+		method       string
+		path         string
+		queryStrings url.Values
 	}
 
 	id1, _ := http.NewRequest("get", "/", nil)
@@ -262,39 +264,47 @@ func TestGetMockHash(t *testing.T) {
 		{
 			name: "METHOD=get, PATH=/",
 			args: args{
-				method: "get",
-				path:   "/",
+				method:       "get",
+				path:         "/",
+				queryStrings: url.Values{},
 			},
 			want: id1,
 		},
 		{
 			name: "METHOD=GET, PATH=/",
 			args: args{
-				method: "GET",
-				path:   "/",
+				method:       "GET",
+				path:         "/",
+				queryStrings: url.Values{},
 			},
 			want: id2,
 		},
 		{
 			name: "METHOD=poST, PATH=/",
 			args: args{
-				method: "poST",
-				path:   "/",
+				method:       "poST",
+				path:         "/",
+				queryStrings: url.Values{},
 			},
 			want: id3,
 		},
 		{
 			name: "METHOD=GET, PATH=/nested/values",
 			args: args{
-				method: "GET",
-				path:   "/nested/values",
+				method:       "GET",
+				path:         "/nested/values",
+				queryStrings: url.Values{},
 			},
 			want: id4,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := GetMockHash(tt.args.method, tt.args.path); !reflect.DeepEqual(got, tt.want) {
+			if got := GetMockHash(RequestId{
+				Method:       tt.args.method,
+				Path:         tt.args.path,
+				QueryStrings: url.Values{},
+			}); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetMockHash() = %v, want %v", got, tt.want)
 			}
 		})
