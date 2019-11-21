@@ -19,6 +19,10 @@ func CreateRouter() *chi.Mux {
 	router.Use(LogMiddleware)
 	router.Use(middleware.Recoverer)
 
+	// healthcheck
+	router.Get("/health/r", readinesHandler)
+	router.Get("/health/l", livenessHandler)
+
 	// routes
 	router.Post(`/mockserver`, addMockHandler)
 	router.Get(`/mockserver`, listMockHandler)
