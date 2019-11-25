@@ -31,7 +31,7 @@ func TestParse(t *testing.T) {
 				HttpResponse: HttpResponse{
 					StatusCode: http.StatusOK,
 					Headers:    map[string]interface{}{},
-					Body:       MockDefaultBody,
+					Body:       DefaultBody,
 				},
 				Times: Times{
 					RemainingTimes: 1,
@@ -58,7 +58,7 @@ func TestParse(t *testing.T) {
 				HttpResponse: HttpResponse{
 					StatusCode: http.StatusOK,
 					Headers:    map[string]interface{}{},
-					Body:       MockDefaultBody,
+					Body:       DefaultBody,
 				},
 				Times: Times{
 					RemainingTimes: 1,
@@ -85,7 +85,7 @@ func TestParse(t *testing.T) {
 				HttpResponse: HttpResponse{
 					StatusCode: http.StatusOK,
 					Headers:    map[string]interface{}{},
-					Body:       MockDefaultBody,
+					Body:       DefaultBody,
 				},
 				Times: Times{
 					RemainingTimes: 1,
@@ -112,7 +112,7 @@ func TestParse(t *testing.T) {
 				HttpResponse: HttpResponse{
 					StatusCode: http.StatusOK,
 					Headers:    map[string]interface{}{},
-					Body:       MockDefaultBody,
+					Body:       DefaultBody,
 				},
 				Times: Times{
 					RemainingTimes: 1,
@@ -139,7 +139,7 @@ func TestParse(t *testing.T) {
 				HttpResponse: HttpResponse{
 					StatusCode: 301,
 					Headers:    map[string]interface{}{},
-					Body:       MockDefaultBody,
+					Body:       DefaultBody,
 				},
 				Times: Times{
 					RemainingTimes: 1,
@@ -220,7 +220,7 @@ func TestParse(t *testing.T) {
 				HttpResponse: HttpResponse{
 					StatusCode: http.StatusOK,
 					Headers:    map[string]interface{}{},
-					Body:       MockDefaultBody,
+					Body:       DefaultBody,
 				},
 				Times: Times{
 					RemainingTimes: 99,

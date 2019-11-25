@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"net/http/httputil"
 	"psmockserver/pkg/config"
 	"reflect"
+	"sync"
 
 	"github.com/kataras/golog"
 )
 
-type Mock struct {
+type MockResponse struct {
 	Body           string      `json:"body"`
 	Headers        http.Header `json:"headers"`
 	Method         string      `json:"method"`
@@ -20,38 +20,48 @@ type Mock struct {
 	RemainingTimes Remaining   `json:"remainingTimes"`
 }
 
-type MockWithRequest struct {
-	Mock    `json:"mock"`
-	Request string `json:"request"`
-}
-
 type Remaining struct {
 	Times     int  `json:"times"`
 	Unlimited bool `json:"unlimited"`
 }
 
-// Mocks holds all mocks
-var Mocks = make(map[*http.Request]Mock)
+type Mock struct {
+	sync.RWMutex
+	Items map[*http.Request]MockResponse
+}
+
+// M holds all mocks
+var M = Mock{
+	Items: make(map[*http.Request]MockResponse),
+}
 
 // Add should add new mock to collection
-func Add(id *http.Request, mock Mock) error {
-	Mocks[id] = mock
+func (m *Mock) Add(id *http.Request, mock MockResponse) error {
+	m.Lock()
+	defer m.Unlock()
+
+	m.Items[id] = mock
 	return nil
 }
 
 // Find looks for mock by id in mock collection
-func Find(id *http.Request) (Mock, error) {
+func (m *Mock) Find(id *http.Request) (MockResponse, error) {
+	m.Lock()
+	defer m.Unlock()
+
 	var foundKey *http.Request
 	found := false
-	mock := Mock{}
-	for key, value := range Mocks {
-		if reflect.DeepEqual(&id, &key) {
-			golog.Infof("Found %s %s", key.RequestURI, key.Method)
-			found = true
-			mock = value
-			foundKey = key
+	mock := MockResponse{}
+	for key, value := range m.Items {
+		if !reflect.DeepEqual(&key, &id) {
+			continue
 		}
+		found = true
+		mock = value
+		foundKey = key
+		break
 	}
+
 	if found != true {
 		return mock, errors.New("Not found")
 	}
@@ -62,40 +72,45 @@ func Find(id *http.Request) (Mock, error) {
 
 	if mock.RemainingTimes.Times > 0 {
 		mock.RemainingTimes.Times = mock.RemainingTimes.Times - 1
-		Mocks[foundKey] = mock
+		m.Items[foundKey] = mock
 		return mock, nil
 	}
 
-	delete(Mocks, foundKey)
+	delete(m.Items, foundKey)
 
-	return Mock{}, errors.New("Not found")
+	return MockResponse{}, errors.New("Not found")
 }
 
 // List logs all mocked endpoints
-func List() {
+func (m *Mock) List() {
+	m.RLock()
+	defer m.RUnlock()
+
 	golog.Infof("Mocks list: ")
-	for x := range Mocks {
+	for x := range m.Items {
 		golog.Infof("\t - %s %s %s", x.Method, x.URL.String(), x.URL.Query().Encode())
 	}
 }
 
 // Serialize marshals json
-func Serialize() ([]byte, error) {
-	var collection = make([]MockWithRequest, len(Mocks))
-	for request, mock := range Mocks {
-		url, _ := httputil.DumpRequest(request, true)
-		collection = append(collection, MockWithRequest{
-			Mock:    mock,
-			Request: string(url),
-		})
+func (m *Mock) Serialize() ([]byte, error) {
+	m.RLock()
+	defer m.RUnlock()
+
+	var collection = make([]MockResponse, len(m.Items))
+	for _, mock := range m.Items {
+		collection = append(collection, mock)
 	}
 
 	return json.Marshal(collection)
 }
 
 // Reset cleanup mock collection
-func Reset() {
-	Mocks = make(map[*http.Request]Mock)
+func (m *Mock) Reset() {
+	m.Lock()
+	defer m.Unlock()
+
+	m.Items = make(map[*http.Request]MockResponse)
 }
 
 // init loads mocks from file
