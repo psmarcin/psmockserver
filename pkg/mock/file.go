@@ -12,7 +12,7 @@ import (
 func LoadFromFile(path string) {
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
-		golog.Infof("Can't read file %+v", err)
+		golog.Debugf("Can't read file %+v", err)
 		return
 	}
 
@@ -22,11 +22,11 @@ func LoadFromFile(path string) {
 		return
 	}
 	for _, p := range payloads {
-		Add(GetMockHash(RequestId{
+		M.Add(GetMockHash(RequestId{
 			Method:       p.HttpRequest.Method,
 			Path:         p.HttpRequest.Path,
 			QueryStrings: p.HttpRequest.QueryStrings,
-		}), Mock{
+		}), MockResponse{
 			Headers:     utils.AddHeaders(p.HttpResponse.Headers),
 			StatusCode:  p.HttpResponse.StatusCode,
 			Body:        p.HttpResponse.Body,

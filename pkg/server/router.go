@@ -40,24 +40,27 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 		Path:         r.URL.Path,
 		QueryStrings: queryStrings,
 	})
-	m, err := mock.Find(reqID)
+	m, err := mock.M.Find(reqID)
 	if err != nil {
-		golog.Warnf("Didn't find mock for: %s %s", r.Method, r.RequestURI)
-		mock.List()
+		golog.Warnf("Didn't find mock for: %s %s %+v", r.Method, r.RequestURI, err)
+		mock.M.List()
 		http.NotFound(w, r)
 		return
 	}
+	fmt.Printf("m.ContentTyope %s\n", m.ContentType)
 	// set headers
 	for k, v := range m.Headers {
 		w.Header().Set(k, v[0])
 	}
+	// set content-type
+	w.Header().Set("content-type", m.ContentType)
 	// set statusCode
 	w.WriteHeader(m.StatusCode)
 	fmt.Fprint(w, m.Body)
 }
 
 func listMockHandler(w http.ResponseWriter, r *http.Request) {
-	str, err := mock.Serialize()
+	str, err := mock.M.Serialize()
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -75,11 +78,11 @@ func addMockHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "cant parse", http.StatusBadRequest)
 		return
 	}
-	mock.Add(mock.GetMockHash(mock.RequestId{
+	mock.M.Add(mock.GetMockHash(mock.RequestId{
 		Method:       p.HttpRequest.Method,
 		Path:         p.HttpRequest.Path,
 		QueryStrings: p.HttpRequest.QueryStrings,
-	}), mock.Mock{
+	}), mock.MockResponse{
 		Headers:     utils.AddHeaders(p.HttpResponse.Headers),
 		StatusCode:  p.HttpResponse.StatusCode,
 		Body:        p.HttpResponse.Body,
@@ -93,6 +96,6 @@ func addMockHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func resetHandler(w http.ResponseWriter, r *http.Request) {
-	mock.Reset()
+	mock.M.Reset()
 	w.WriteHeader(http.StatusAccepted)
 }

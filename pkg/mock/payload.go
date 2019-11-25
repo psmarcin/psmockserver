@@ -7,6 +7,12 @@ import (
 	"net/url"
 )
 
+const (
+	DefaultContentType = "application/json"
+	DefaultBody        = "{\"defaultBody\": true}"
+	DefaultPath        = "/"
+)
+
 type RequestId struct {
 	Method       string
 	Path         string
@@ -36,21 +42,17 @@ type Times struct {
 	Unlimited      bool `json:"unlimited"`
 }
 
-const MockDefaultBody = `{
-					"defaultBody": true
-				}`
-
 func Parse(body []byte) (Payload, error) {
 	payload := Payload{
 		HttpRequest: HttpRequest{
 			Method:      http.MethodGet,
-			Path:        "/",
-			ContentType: "application/json",
+			Path:        DefaultPath,
+			ContentType: DefaultContentType,
 		},
 		HttpResponse: HttpResponse{
 			StatusCode: http.StatusOK,
 			Headers:    map[string]interface{}{},
-			Body:       MockDefaultBody,
+			Body:       DefaultBody,
 		},
 		Times: Times{
 			RemainingTimes: 1,

@@ -2,55 +2,58 @@ package mock
 
 import (
 	"net/http"
-	"reflect"
 	"testing"
 )
 
-func TestFind(t *testing.T) {
-	type args struct {
-		id *http.Request
+func TestFindNoMock(t *testing.T) {
+	m := Mock{}
+	id, _ := http.NewRequest(http.MethodGet, "/test-url/nested", nil)
+	_, err := m.Find(id)
+	if err == nil {
+		t.Fatalf("Find() didn't return error but expected to")
 	}
-	id, _ := http.NewRequest(http.MethodGet, "/not-foud", nil)
-	tests := []struct {
-		name    string
-		args    args
-		want    Mock
-		wantErr bool
-	}{
-		{
-			name: "should not find mock",
-			args: args{
-				id,
-			},
-			want:    Mock{},
-			wantErr: true,
+}
+
+func TestFindByPathAndMethod(t *testing.T) {
+	m := Mock{
+		Items: make(map[*http.Request]MockResponse),
+	}
+	path := "/test-endpoint"
+	method := http.MethodGet
+	mockID, _ := http.NewRequest(method, path, nil)
+	responseBody := "response"
+	m.Add(mockID, MockResponse{
+		Body: responseBody,
+		RemainingTimes: Remaining{
+			Unlimited: true,
 		},
+	})
+	id, _ := http.NewRequest(method, path, nil)
+
+	found, err := m.Find(id)
+
+	if err != nil {
+		t.Fatalf("Find() returns error but expected not to %+v", err)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := Find(tt.args.id)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Find() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Find() = %v, want %v", got, tt.want)
-			}
-		})
+	if found.Body != responseBody {
+		t.Fatalf("Find() returns body %s but expected %s", found.Body, responseBody)
 	}
 }
 
 func TestFindTimes0(t *testing.T) {
-	id, _ := http.NewRequest(http.MethodGet, "/test-mock-times-0", nil)
 	m := Mock{
+		Items: make(map[*http.Request]MockResponse),
+	}
+	id, _ := http.NewRequest(http.MethodGet, "/test-mock-times-0", nil)
+	mock := MockResponse{
 		Body: "test-mock-times-0",
 		RemainingTimes: Remaining{
 			Times:     0,
 			Unlimited: false,
 		},
 	}
-	Add(id, m)
-	_, err := Find(id)
+	m.Add(id, mock)
+	_, err := m.Find(id)
 	if err != nil {
 		return
 	}
@@ -58,17 +61,17 @@ func TestFindTimes0(t *testing.T) {
 	t.Error("Find() found but expected not to found")
 }
 
-func TestFindQueryString(t *testing.T) {
+func TestFindByQueryString(t *testing.T) {
 	id, _ := http.NewRequest(http.MethodGet, "/test-mock-times-0?queryString=test", nil)
-	m := Mock{
+	m := MockResponse{
 		Body: "test-mock-times-0",
 		RemainingTimes: Remaining{
 			Times:     1,
 			Unlimited: false,
 		},
 	}
-	Add(id, m)
-	_, err := Find(id)
+	M.Add(id, m)
+	_, err := M.Find(id)
 	if err == nil {
 		return
 	}
@@ -78,17 +81,17 @@ func TestFindQueryString(t *testing.T) {
 
 func TestFindShouldDecreaseTimes(t *testing.T) {
 	id, _ := http.NewRequest(http.MethodGet, "/test-mock-times-10", nil)
-	m := Mock{
+	m := MockResponse{
 		Body: "test-mock-times-10",
 		RemainingTimes: Remaining{
 			Times:     10,
 			Unlimited: false,
 		},
 	}
-	Add(id, m)
-	Find(id)
-	Find(id)
-	found, err := Find(id)
+	M.Add(id, m)
+	M.Find(id)
+	M.Find(id)
+	found, err := M.Find(id)
 	if err != nil {
 		t.Errorf("Find() expect to find mock but go err %v", err)
 	}
@@ -98,10 +101,35 @@ func TestFindShouldDecreaseTimes(t *testing.T) {
 	return
 }
 
+func BenchmarkFind(b *testing.B) {
+	m := Mock{
+		Items: make(map[*http.Request]MockResponse),
+	}
+	path := "/test-endpoint"
+	method := http.MethodGet
+	mockID, _ := http.NewRequest(method, path, nil)
+	responseBody := "response"
+	m.Add(mockID, MockResponse{
+		Body: responseBody,
+		RemainingTimes: Remaining{
+			Unlimited: true,
+		},
+	})
+	id, _ := http.NewRequest(method, path, nil)
+
+	// run the Add method b.N times
+	for n := 0; n < b.N; n++ {
+		m.Find(id)
+	}
+}
+
 func TestAdd(t *testing.T) {
+	m := Mock{
+		Items: make(map[*http.Request]MockResponse),
+	}
 	type args struct {
 		id   *http.Request
-		mock Mock
+		mock MockResponse
 	}
 	id, _ := http.NewRequest(http.MethodGet, "/", nil)
 	tests := []struct {
@@ -113,7 +141,7 @@ func TestAdd(t *testing.T) {
 			name: "should add mock to root handler",
 			args: args{
 				id: id,
-				mock: Mock{
+				mock: MockResponse{
 					Body:        "test",
 					Headers:     http.Header{},
 					Method:      http.MethodGet,
@@ -125,29 +153,50 @@ func TestAdd(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := Add(tt.args.id, tt.args.mock); (err != nil) != tt.wantErr {
+			if err := m.Add(tt.args.id, tt.args.mock); (err != nil) != tt.wantErr {
 				t.Errorf("Add() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
 }
 
+func BenchmarkAdd(b *testing.B) {
+	m := Mock{
+		Items: make(map[*http.Request]MockResponse),
+	}
+	id, _ := http.NewRequest(http.MethodGet, "/test-mock-times-0", nil)
+	mock := MockResponse{
+		Body: "test-mock-times-0",
+		RemainingTimes: Remaining{
+			Times:     0,
+			Unlimited: false,
+		},
+	}
+	// run the Add method b.N times
+	for n := 0; n < b.N; n++ {
+		m.Add(id, mock)
+	}
+}
+
 func TestReset(t *testing.T) {
+	m := Mock{
+		Items: make(map[*http.Request]MockResponse),
+	}
 	id, _ := http.NewRequest(http.MethodGet, "/", nil)
 	// mock
-	Add(id, Mock{
+	m.Add(id, MockResponse{
 		Body: "123",
 	})
 
-	if len(Mocks) == 0 {
+	if len(m.Items) == 0 {
 		t.Fatalf("Didn't set any mock before Reset()")
 	}
 
 	// act
-	Reset()
+	m.Reset()
 
 	// expect
-	if len(Mocks) != 0 {
-		t.Fatalf("Reset() should clean all mocks but got %d mocks", len(Mocks))
+	if len(m.Items) != 0 {
+		t.Fatalf("Reset() should clean all mocks but got %d mocks", len(m.Items))
 	}
 }
