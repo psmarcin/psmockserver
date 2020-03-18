@@ -3,6 +3,7 @@ package mock
 import (
 	"encoding/json"
 	"io/ioutil"
+
 	"psmockserver/pkg/utils"
 
 	"github.com/kataras/golog"

@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"psmockserver/pkg/config"
 	"reflect"
 	"sync"
+
+	"psmockserver/pkg/config"
 
 	"github.com/kataras/golog"
 )
